@@ -58,3 +58,59 @@ count(df, type1)
 count(df, type2)
 ```
 
+## A.2. Histogramas
+Un histograma es una representación gráfica de la distribución de un conjunto de datos que muestra la frecuencia de los valores en intervalos o "bins".
+Se usa para analizar la distribución de una variable continua, como la altura o el peso de los Pokémon.
+
+### Histograma de la variable hp
+```{r}
+# Por ejemplo, el siguiente código construye un histograma para la variable hp
+
+hist(df$hp)
+
+# Se puede hacer un poco más claro agregando título y etiquetas:
+hist(df$hp,
+     main = "Distribución de variable hp",
+     xlab = "HP",
+     col = "lightblue",
+     border = "black")
+```
+
+### Histograma de la variable attack
+```{r}
+# Histograma de la variable attack
+hist(df$attack,
+     main = "Distribución de variable attack",
+     xlab = "Attack",
+     col = "lightblue",
+     border = "black")
+```
+### Histograma de la variable defense
+```{r}
+# Histograma de la variable defense
+hist(df$defense,
+     main = "Distribución de variable defense",
+     xlab = "Defense",
+     col = "lightblue",
+     border = "black")
+```
+### Histograma de la variable weight_kg
+```{r}
+# Histograma de la variable weight_kg
+hist(df$weight_kg,
+     main = "Distribución de variable weight_kg",
+     xlab = "Weight (kg)",
+     col = "lightblue",
+     border = "black")
+```
+### Histograma de la variable height_m
+```{r}
+# Histograma de la variable height_m
+hist(df$height_m,
+     main = "Distribución de variable height_m",
+     xlab = "Height (m)",
+     col = "lightblue",
+     border = "black")
+```
+
+## A.3. Boxplots
