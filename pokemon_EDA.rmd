@@ -279,6 +279,60 @@ grid.arrange(density_hp, density_speed, density_attack,
 ```
 
 ## B.2. Diagramas de Barras
+Un diagrama de barras es una representación gráfica que muestra la frecuencia o cantidad de diferentes categorías o grupos. Cada barra representa una categoría y su altura (o longitud) indica la cantidad o frecuencia de esa categoría.
+Es muy similar a un histograma, pero en lugar de mostrar la distribución de una variable continua, muestra la frecuencia de categorías discretas.
+
+### Número de Pokémon basado en su tipo primario (type1) y secundario (type2)
+```{r}
+ggplot(data=df, aes(type1)) +
+  geom_bar(aes(fill = ..count..), alpha = 0.85) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  # Gradiente de colores
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Distribucion basados en Tipo 1") +
+  coord_flip()
+```
+
+Vemos que el tipo mas commun es Water, Normal, Grass y Bug.
+
+### Diagrama de barras para el tipo secundario (type2)
+```{r}
+ggplot(data = df, aes(type2)) +
+  geom_bar(aes(fill = ..count..), alpha = 0.85) +
+  scale_fill_gradient(low = "#ffdb67", high = "#8b0000") +
+  # Gradiente de colores
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Distribucion basados en Tipo 2") +
+  coord_flip()
+```
+
+### Número de Pokemon legendarios según su tipo primario (type1)
+
+```{r}
+df %>% 
+  filter(is_legendary == 1) %>%
+  ggplot(aes(type1)) +
+  geom_bar(aes(fill = ..count..)) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  # Gradiente de colores
+  theme(axis.text.x = element_text(angle = 90, hjust = 0)) +
+  ggtitle("Numero de Pokemon Legendarios del Type-1")
+```
+
+El siguiente gráfico muestra la cantidad de Pokémon legendarios según su tipo primario (type1).
+
+```{r}
+df %>%
+  filter(is_legendary == 0) %>%
+  ggplot(aes(type1)) +
+  geom_bar(aes(fill = ..count..)) +
+  scale_fill_gradient(low = "orange", high = "red") +  # Gradiente de colores 
+  theme(axis.text.x = element_text(angle = 90, hjust = 0)) +
+  ggtitle("Numero de Pokemon No Legendarios del Type-1")
+```
+
+Este nuevo gráfico muestra la cantidad de Pokémon no legendarios según su tipo primario (type1).
+Vemos que el tipo más común es Water, Normal, Grass y Bug.
 
 ## B.3. Gráfico de dispersión – Scatterplots
 
