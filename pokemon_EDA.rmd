@@ -317,7 +317,7 @@ Un diagrama de barras es una representación gráfica que muestra la frecuencia 
 Es muy similar a un histograma, pero en lugar de mostrar la distribución de una variable continua, muestra la frecuencia de categorías discretas.
 
 ### Número de Pokémon basado en su tipo primario (type1) y secundario (type2)
-```{r}
+```{r warning=FALSE}
 ggplot(data=df, aes(type1)) +
   geom_bar(aes(fill = ..count..), alpha = 0.85) +
   scale_fill_gradient(low = "lightblue", high = "darkblue") +
@@ -383,9 +383,9 @@ ggplot(data = df, aes(attack, defense)) +
 ```
 
 Ahora graficamos la dispersión entre attack y speed para los legendarios:
-```{r warning=FALSE}
+```{r warning=FALSE, message=FALSE}
 speed_attack_legendary <- ggplot(na.omit(df), aes(attack, speed)) + 
-  geom_point(aes(color=is_legendary)) +  
+  geom_point(aes(color=is_legendary)) +
   geom_label_repel(data=subset(df, (attack > 170 | speed > 150) & is_legendary == 1), aes(label=name), 
                    box.padding = 0.35, point.padding = 0.5, segment.color = 'grey50') + 
   geom_smooth(method = "lm") 
@@ -394,7 +394,7 @@ print(speed_attack_legendary)
 ```
 
 Ahora graficamos un grafico similar pero para attack y weight_kg para los legendarios y etiquetamos a los pokemon con attack > 150 o weight_kg > 650:
-```{r warning=FALSE}
+```{r warning=FALSE, message=FALSE}
 weight_attack_legendary <- ggplot(na.omit(df), aes(attack, weight_kg)) + 
   geom_point(aes(color=is_legendary)) +  
   geom_label_repel(data=subset(df, (attack > 150 | weight_kg > 650) & is_legendary == 1), aes(label=name), 
@@ -405,7 +405,7 @@ print(weight_attack_legendary)
 ```
 
 Ahora graficamos un grafico similar pero para attack y height_m para los legendarios y etiquetamos a los pokemon con attack > 150 o height_m > 7.5:
-```{r warning=FALSE}
+```{r warning=FALSE, message=FALSE}
 height_attack_legendary <- ggplot(na.omit(df), aes(attack, height_m)) + 
   geom_point(aes(color=is_legendary)) +  
   geom_label_repel(data=subset(df, (attack > 150 | height_m > 7.5) & is_legendary == 1), aes(label=name), 
@@ -416,7 +416,7 @@ print(height_attack_legendary)
 ```
 
 Ahora graficamos un grafico similar pero para attack y hp para los legendarios y etiquetamos a los pokemon con attack > 170 o hp > 190:
-```{r warning=FALSE}
+```{r warning=FALSE, message=FALSE}
 hp_attack_legendary <- ggplot(na.omit(df), aes(attack, hp)) + 
   geom_point(aes(color=is_legendary)) +  
   geom_label_repel(data=subset(df, (attack > 170 | hp > 190) & is_legendary == 1), aes(label=name), 
@@ -461,7 +461,7 @@ grid.arrange(bp_leg, bp_nor, ncol = 2)
 Un mapa de calor es una representación gráfica de datos en la que los valores se representan mediante colores. Los mapas de calor son útiles para visualizar patrones, tendencias y correlaciones en grandes conjuntos de datos.
 
 Nuestro primer ejemplo se basa en analizar mas en detalle los pokemon tipo Ice:
-```{r warning=FALSE}
+```{r warning=FALSE, message=FALSE}
 hmap_attr <- select(df, type1, is_legendary, hp, defense, attack, sp_attack, sp_defense, speed) 
 hmap_attr_leg <- filter(hmap_attr, is_legendary == 1) 
 hmap_attr_leg <- group_by(hmap_attr_leg, type1) 
@@ -478,7 +478,7 @@ element_text(angle=90, hjust=0)) + coord_equal()
 ```
 
 Ahora realizamos el mismo mapa de calor pero para los pokemon no legendarios:
-```{r warning=FALSE}
+```{r warning=FALSE, message=FALSE}
 hmap_attr <- select(df, type1, is_legendary, hp, defense, attack, sp_attack, sp_defense, speed) 
 hmap_attr_norm <- filter(hmap_attr, is_legendary == 0) 
 hmap_attr_norm <- group_by(hmap_attr_norm, type1) 
@@ -498,7 +498,7 @@ Pero parecen que igual se nivalan en cuanto a sus atributos, ya que la mayoría 
 
 ## B.6. Matriz de Correlación
 
-```{r warning=FALSE}
+```{r warning=FALSE, message=FALSE}
 hmap_attr <- select(df, type1, is_legendary, hp, defense, attack, sp_attack, sp_defense, speed) 
 hmap_attr_leg <- filter(hmap_attr, is_legendary == 1) 
 hmap_attr_leg <- group_by(hmap_attr_leg, type1) 
@@ -519,12 +519,12 @@ de Atributos - Legendarios") + scale_fill_gradientn(colours = hm.palette(100)) +
 
 ### Análisis de la efectividad de los Pokémon basados en su tipo de ataque primario. 
 Se quiere encontrar la efectividad de los Pokémon basados en su tipo de ataque primario contra otros pokemones.
-```{r warning=FALSE}
+```{r warning=FALSE, message=FALSE}
 # se vuelve a cargar el dataset
-df= (read.csv(file.choose(), header=T, encoding = "UTF-8")) 
-attach(df) 
+df <- (read.csv(file.choose(), header = TRUE, encoding = "UTF-8"))
+attach(df)
  
-df = tibble::as_tibble(df) 
+df <- tibble::as_tibble(df) 
 colnames(df)[25] <- "classification" 
 df$capture_rate <- as.numeric(df$capture_rate) 
  
