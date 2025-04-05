@@ -113,4 +113,41 @@ hist(df$height_m,
      border = "black")
 ```
 
-## A.3. Boxplots
+## A.3. Boxplots (cajas y bigotes)
+Un boxplot es una representación gráfica que muestra la distribución de un conjunto de datos a través de sus cuartiles.
+Los boxplots son útiles para identificar la presencia de valores atípicos (outliers) y para comparar la distribución de diferentes grupos.
+
+### Boxplot de la variable attack
+```{r}
+boxplot(attack ~ type1,
+        data = df,
+        main = "Ataque por Tipo de Pokémon",
+        xlab = "Tipo",
+        ylab = "Ataque",
+        las = 2,
+        col = "lightgreen")
+```
+
+### Boxplot de la variable defense por tipo de Pokémon
+```{r}
+boxplot(defense ~ type1,
+        data = df,
+        main = "Defensa por Tipo de Pokémon",
+        xlab = "Tipo",
+        ylab = "Defensa",
+        las = 2,
+        col = "lightgreen")
+```
+
+### Boxplot de la variable hp por generación de Pokémon
+```{r}
+boxplot(hp ~ generation,
+        data = df,
+        main = "HP por Generación de Pokémon",
+        xlab = "Generación",
+        ylab = "HP",
+        las = 1,
+        col = "lightblue")
+```
+
+## A.4. Gráficos de dispersión
