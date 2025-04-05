@@ -336,8 +336,94 @@ Vemos que el tipo más común es Water, Normal, Grass y Bug.
 
 ## B.3. Gráfico de dispersión – Scatterplots
 
+Ejemplo dado de un gráfico de dispersión entre ataque y defensa.
+```{r warning=FALSE}
+ggplot(data = df, aes(attack, defense)) +
+  geom_point(aes(color=is_legendary), alpha = 0.8) +
+  scale_color_gradient(low="green", high = "blue") +
+  ggtitle("Contraste  Defensa vs Ataque") +
+  geom_label_repel(data=subset(df,attack > 150 | defense > 160 | attack < 25 | defense < 25), 
+  aes(label=name),
+  box.padding = 0.35, point.padding = 0.5, size = 3,
+  segment.color = 'grey50')
+```
+
+Ahora graficamos la dispersión entre attack y speed para los legendarios:
+```{r warning=FALSE}
+speed_attack_legendary <- ggplot(na.omit(df), aes(attack, speed)) + 
+  geom_point(aes(color=is_legendary)) +  
+  geom_label_repel(data=subset(df, (attack > 170 | speed > 150) & is_legendary == 1), aes(label=name), 
+                   box.padding = 0.35, point.padding = 0.5, segment.color = 'grey50') + 
+  geom_smooth(method = "lm") 
+ 
+print(speed_attack_legendary) 
+```
+
+Ahora graficamos un grafico similar pero para attack y weight_kg para los legendarios y etiquetamos a los pokemon con attack > 150 o weight_kg > 650:
+```{r warning=FALSE}
+weight_attack_legendary <- ggplot(na.omit(df), aes(attack, weight_kg)) + 
+  geom_point(aes(color=is_legendary)) +  
+  geom_label_repel(data=subset(df, (attack > 150 | weight_kg > 650) & is_legendary == 1), aes(label=name), 
+                   box.padding = 0.35, point.padding = 0.5, segment.color = 'grey50') + 
+  geom_smooth(method = "lm")
+
+print(weight_attack_legendary)
+```
+
+Ahora graficamos un grafico similar pero para attack y height_m para los legendarios y etiquetamos a los pokemon con attack > 150 o height_m > 7.5:
+```{r warning=FALSE}
+height_attack_legendary <- ggplot(na.omit(df), aes(attack, height_m)) + 
+  geom_point(aes(color=is_legendary)) +  
+  geom_label_repel(data=subset(df, (attack > 150 | height_m > 7.5) & is_legendary == 1), aes(label=name), 
+                   box.padding = 0.35, point.padding = 0.5, segment.color = 'grey50') + 
+  geom_smooth(method = "lm")
+
+print(height_attack_legendary)
+```
+
+Ahora graficamos un grafico similar pero para attack y hp para los legendarios y etiquetamos a los pokemon con attack > 170 o hp > 190:
+```{r warning=FALSE}
+hp_attack_legendary <- ggplot(na.omit(df), aes(attack, hp)) + 
+  geom_point(aes(color=is_legendary)) +  
+  geom_label_repel(data=subset(df, (attack > 170 | hp > 190) & is_legendary == 1), aes(label=name), 
+                   box.padding = 0.35, point.padding = 0.5, segment.color = 'grey50') + 
+  geom_smooth(method = "lm")
+
+print(hp_attack_legendary)
+```
+
 ## B.4. Diagramas de Caja o Boxplots
+Un boxplot es una representación gráfica que muestra la distribución de un conjunto de datos a través de sus cuartiles. Los boxplots son útiles para identificar la presencia de valores atípicos (outliers) y para comparar la distribución de diferentes grupos.
+
+Al analizar los boxplots vemos que exista mas valores atipicos en cuantos a atributos dentro de los pokemon no-leyendarios que en los legendarios.
+En amarillo tenemos los pokemon no legendarios y en verde los legendarios.
+```{r warning=FALSE}
+# Select relevant columns
+box_plot_attr <- select(df, type1, is_legendary, hp, defense, attack, sp_attack, sp_defense, speed)
+
+# Separate legendary and non-legendary Pokémon
+box_plot_attr_leg <- filter(box_plot_attr, is_legendary == 1)
+box_plot_attr_nor <- filter(box_plot_attr, is_legendary == 0)
+
+# Reshape to long format
+box_plot_attr_leg_long <- gather(box_plot_attr_leg, attribute, value, -c(type1, is_legendary))
+box_plot_attr_nor_long <- gather(box_plot_attr_nor, attribute, value, -c(type1, is_legendary))
+
+# Create boxplots
+bp_leg <- ggplot(data = box_plot_attr_leg_long, aes(attribute, value)) +
+  geom_boxplot(fill = "green4") +
+  ggtitle("Pokémon Legendario")
+
+bp_nor <- ggplot(data = box_plot_attr_nor_long, aes(attribute, value)) +
+  geom_boxplot(fill = "yellow2") +
+  ggtitle("Pokémon No Legendario")
+
+# Display plots side by side
+grid.arrange(bp_leg, bp_nor, ncol = 2)
+
+```
 
 ## B.5. Mapas de calor 
+
 
 ## B.6. Matriz de Correlación
