@@ -1,5 +1,5 @@
 ---
-title: "Análisis Exploratorio de Datos y gráficos depurados" # "Exploratory data analysis Pokemon dataset"
+# title: "Análisis Exploratorio de Datos y gráficos depurados" # "Exploratory data analysis Pokemon dataset"
 output:
   pdf_document
 documentclass: article
@@ -11,11 +11,11 @@ lang: es
 
 \newpage
 
-# Portada
+# Análisis Exploratorio de Datos y gráficos depurados
 
 ## CI-0131 Diseño de Experimentos
 
-## Laboratorio 2: Análisis Exploratorio de Datos y gráficos depurados
+## Laboratorio 2
 
 ### Estudiantes:
 
