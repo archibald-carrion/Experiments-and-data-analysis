@@ -203,4 +203,87 @@ pairs(df[, c("hp", "attack", "defense", "speed")],
 
 # B. Segunda parte
 ## instalación de librerías necesarias
-## B.1. Gráficos de densidad de varios atributos de Pokémon. 
+Instalar los paquetes:
+```{r}
+# instalar las siguientes librerías si no están instaladas
+# install.packages(c("dplyr",
+#                    "ggplot2",
+#                    "gridExtra",
+#                    "tidyr",
+#                    "reshape2",
+#                    "RColorBrewer",
+#                    "ggrepel"))
+```
+
+Cargas los paquetes:
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(tidyr)
+library(reshape2)
+library(RColorBrewer)
+library(ggrepel)
+```
+
+Una timble en R es una versión mejorada de un data frame, que proporciona una forma más legible y fácil de trabajar con los datos. Las timbles son parte del paquete dplyr y están diseñadas para ser más eficientes y amigables para el usuario.
+```{r message=FALSE, warning=FALSE}
+df <- tibble::as_tibble(df)
+colnames(df)[25] <- "classification"
+df$capture_rate <- as.numeric(df$capture_rate)
+head(df)
+```
+
+Como ese timble contiene muchos datos, solo usaramos un subconjunto de las columnas pra realizar nuestra EDA.
+```{r}
+df <- select(df, name, classification, hp, weight_kg,
+             height_m, speed, attack, defense,
+             sp_attack, sp_defense, type1, type2,
+             abilities, generation, is_legendary,
+             capture_rate)
+head(df)
+```
+
+## B.1. Gráficos de densidad de varios atributos de Pokémon.
+Un diagrama de densidad es una representación gráfica que muestra la distribución de una variable continua a través de una curva suave (suavizado del nucleo). Es útil para visualizar la forma de la distribución y la concentración de los datos en diferentes rangos de valores.
+
+```{r warning=FALSE}
+density_hp <- ggplot(data = df, aes(hp)) +
+  geom_density(col = "white", fill = "pink", alpha = 0.8) +
+  ggtitle("Densidad de Hit Points o Vida")
+
+density_speed  <-  ggplot(data = df,  aes(speed)) +
+  geom_density(col = "white",  fill = "darkorchid",  alpha = 0.8) +
+  ggtitle("Densidad de velocidad")
+
+density_attack  <-  ggplot(data = df,  aes(attack)) +
+  geom_density(col = "white",  fill = "orange",  alpha = 0.7) +
+  ggtitle("Densidad caracteristicas ofensivas")
+
+density_defense  <- ggplot(data = df, aes(defense)) +
+  geom_density(col = "white",  fill = "firebrick",  alpha = 0.7) +
+  ggtitle("Densidad caracteristicas defensivas")
+
+density_height  <- ggplot(data = df, aes(height_m)) +
+  geom_density(col = "white",  fill = "lightblue",  alpha = 0.7) +
+  ggtitle("Densidad altura")
+
+density_weight  <- ggplot(data = df, aes(weight_kg)) +
+  geom_density(col = "white",  fill = "lightgreen",  alpha = 0.7) +
+  ggtitle("Densidad peso")
+
+
+grid.arrange(density_hp, density_speed, density_attack,
+             density_defense, density_height, density_weight,
+             ncol = 3, nrow = 2)
+```
+
+## B.2. Diagramas de Barras
+
+## B.3. Gráfico de dispersión – Scatterplots
+
+## B.4. Diagramas de Caja o Boxplots
+
+## B.5. Mapas de calor 
+
+## B.6. Matriz de Correlación
