@@ -151,3 +151,56 @@ boxplot(hp ~ generation,
 ```
 
 ## A.4. Gráficos de dispersión
+
+Un gráfico de dispersión (scatter plot) es una representación gráfica que muestra la relación entre dos variables cuantitativas.
+Los puntos en el gráfico representan pares de valores de las dos variables, lo que permite observar patrones, tendencias y posibles correlaciones entre ellas, o en el caso contrario, si no existe relación entre las variables.
+
+### Gráfico de dispersión entre ataque y defensa
+```{r}
+# Por ejemplo, el siguiente código construye un gráfico de dispersión
+# entre attack y defense.
+plot(df$attack,
+     df$defense)
+
+# Se puede hacer un poco más claro agregando título y etiquetas:
+plot(df$attack,
+     df$defense,
+     main = "Ataque vs Defensa",
+     xlab = "Ataque",
+     ylab = "Defensa",
+     col = "darkred")
+```
+
+### Gráfico de dispersión entre attack y hp
+```{r}
+# Gráfico de dispersión entre attack y hp
+plot(df$attack,
+     df$hp,
+     main = "Ataque vs HP",
+     xlab = "Ataque",
+     ylab = "HP",
+     col = "darkblue")
+```
+
+### Gráfico de dispersión entre defense y hp
+```{r}
+# Gráfico de dispersión entre defense y hp
+plot(df$defense,
+     df$hp,
+     main = "Defensa vs HP",
+     xlab = "Defensa",
+     ylab = "HP",
+     col = "darkgreen")
+```
+
+De la misma manera se pueden generar varios gráficos simultáneamente
+```{r}
+# Matrices de dispersión dos a dos para hp, attack, defense y speed.
+pairs(df[, c("hp", "attack", "defense", "speed")],
+      main = "Matrices de Dispersión")
+```
+
+
+# B. Segunda parte
+## instalación de librerías necesarias
+## B.1. Gráficos de densidad de varios atributos de Pokémon. 
