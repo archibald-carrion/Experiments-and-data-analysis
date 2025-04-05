@@ -1,0 +1,60 @@
+---
+title: "Análisis Exploratorio de Datos y gráficos depurados" # "Exploratory data analysis Pokemon dataset"
+author: "Archibald Emmanuel Carrion Claeys"
+output:  pdf_document
+---
+
+# A. Primera parte
+## A.1. Información general
+
+Empezamos realizando un lectura de los datos. En este caso, el dataset es un archivo CSV que contiene información sobre Pokémon.
+
+```{r results = 'hide', message=FALSE, warning=FALSE}
+df <- (read.csv(file.choose(), header = TRUE, encoding = "UTF-8"))
+attach(df)
+
+# Resumen informativo de los datos - tendencias
+summary(df)
+``` 
+
+Podemos conseguir información general sobre el dataset usando str() y glimpse().
+```{r results = 'hide', message=FALSE, warning=FALSE}
+# Información básica
+str(df)
+# glimpse() es una función del paquete dplyr que proporciona una
+# vista rápida de los datos
+library(dplyr)
+glimpse(df)
+
+# adicionalmente tambien existe summary() que nos da un resumen de las
+# variables, como  cuartiles  y  datos  máximos  y mínimos
+summary(df)
+```
+
+No se agregaron las salidas de los 2 chunks anteriores, ya que son muy extensas, y pueden facilmente ser consultadas en el archivo csv adjunto.
+Algunos de los datos mas valiosos que se agregara al reporte son los siguientes
+- attack
+- defense
+- hp
+- weight_kg
+- height_m
+
+```{r}
+summary(df$attack)
+summary(df$defense)
+summary(df$hp)
+summary(df$weight_kg)
+summary(df$height_m)
+```
+
+Las variables categoricas se pueden obtener usando la función table() o count().
+En R, una variable categórica es aquella que puede tomar un número limitado de valores distintos, representando categorías o grupos.
+```{r}
+# Variables categoricas
+table(df$type1)
+table(df$type2)
+
+count(df, type1)
+count(df, type2)
+```
+
