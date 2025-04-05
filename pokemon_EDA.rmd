@@ -1,8 +1,42 @@
 ---
 title: "Análisis Exploratorio de Datos y gráficos depurados" # "Exploratory data analysis Pokemon dataset"
-author: "Archibald Emmanuel Carrion Claeys"
-output:  pdf_document
+output:
+  pdf_document
+documentclass: article
+fontsize: 10pt
+header-includes:
+  - \usepackage{times}
+lang: es
 ---
+
+\newpage
+
+# Portada
+
+## CI-0131 Diseño de Experimentos
+
+## Laboratorio 2: Análisis Exploratorio de Datos y gráficos depurados
+
+### Estudiantes:
+
+- [Milton]
+- [Archibald Emmanuel Carrion Claeys, C01736]
+\vspace{5cm}
+
+***
+
+**Para el Profesor:**
+
+**Nota:** \hrulefill
+
+**Comentarios Generales:**
+
+\vspace{1cm}
+\hrulefill
+\vspace{1cm}
+\hrulefill
+
+\newpage
 
 # A. Primera parte
 ## A.1. Información general
@@ -424,6 +458,110 @@ grid.arrange(bp_leg, bp_nor, ncol = 2)
 ```
 
 ## B.5. Mapas de calor 
+Un mapa de calor es una representación gráfica de datos en la que los valores se representan mediante colores. Los mapas de calor son útiles para visualizar patrones, tendencias y correlaciones en grandes conjuntos de datos.
 
+Nuestro primer ejemplo se basa en analizar mas en detalle los pokemon tipo Ice:
+```{r warning=FALSE}
+hmap_attr <- select(df, type1, is_legendary, hp, defense, attack, sp_attack, sp_defense, speed) 
+hmap_attr_leg <- filter(hmap_attr, is_legendary == 1) 
+hmap_attr_leg <- group_by(hmap_attr_leg, type1) 
+hmap_attr_leg <- summarise(hmap_attr_leg, hp=median(hp), attack=median(attack), 
+defense=median(defense), sp_attack=median(sp_attack), sp_defense=median(sp_defense), 
+speed=median(speed)) 
+ 
+hmap_attr_leg_m <- melt(hmap_attr_leg) 
+hm.palette <- colorRampPalette(rev(brewer.pal(5, 'RdYlBu')), space='Lab') 
+ 
+ggplot(data=hmap_attr_leg_m,  aes(type1,  variable))  +  geom_tile(aes(fill=value))  +  ggtitle("Pokémon 
+Legendaio:  Type1  -  Atributo")  +  scale_fill_gradientn(colours  =  hm.palette(100))  +  theme(axis.text.x  = 
+element_text(angle=90, hjust=0)) + coord_equal()
+```
+
+Ahora realizamos el mismo mapa de calor pero para los pokemon no legendarios:
+```{r warning=FALSE}
+hmap_attr <- select(df, type1, is_legendary, hp, defense, attack, sp_attack, sp_defense, speed) 
+hmap_attr_norm <- filter(hmap_attr, is_legendary == 0) 
+hmap_attr_norm <- group_by(hmap_attr_norm, type1) 
+hmap_attr_norm <- summarise(hmap_attr_norm, hp=median(hp), attack=median(attack), 
+defense=median(defense), sp_attack=median(sp_attack), sp_defense=median(sp_defense), 
+speed=median(speed)) 
+ 
+hmap_attr_norm_m <- melt(hmap_attr_norm) 
+hm.palette <- colorRampPalette(rev(brewer.pal(5, 'RdYlBu')), space='Lab') 
+ 
+ggplot(data=hmap_attr_norm_m,  aes(type1,  variable))  +  geom_tile(aes(fill=value))  +  ggtitle("Pokémon 
+Legendaio:  Type1  -  Atributo")  +  scale_fill_gradientn(colours  =  hm.palette(100))  +  theme(axis.text.x  = 
+element_text(angle=90, hjust=0)) + coord_equal()
+```
+Al analizar el segundo mapa de calor vemos que los pokemon no legendarios tienden a ser mas "dispersos" en cuanto a sus atributos, ya que no se concentran en un solo tipo de pokemon, salvo un par de puntos mas notables como steel y defense, o fighting y attack, aparte de eso no presentan tanta concentración.
+Pero parecen que igual se nivalan en cuanto a sus atributos, ya que la mayoría de los pokemon con una estadistica alta tienen otras mas bajas.
 
 ## B.6. Matriz de Correlación
+
+```{r warning=FALSE}
+hmap_attr <- select(df, type1, is_legendary, hp, defense, attack, sp_attack, sp_defense, speed) 
+hmap_attr_leg <- filter(hmap_attr, is_legendary == 1) 
+hmap_attr_leg <- group_by(hmap_attr_leg, type1) 
+hmap_attr_leg <- summarise(hmap_attr_leg, hp=median(hp), attack=median(attack), 
+defense=median(defense), sp_attack=median(sp_attack), sp_defense=median(sp_defense), 
+speed=median(speed)) 
+ 
+row.names(hmap_attr_leg) <- hmap_attr_leg$type1 
+hmap_attr_leg$type1 <- NULL 
+hmap_attr_leg$is_legendary <- NULL 
+ 
+hmap_attr_leg_cor <- cor(hmap_attr_leg) 
+hmap_attr_leg_cor_m <- melt(hmap_attr_leg_cor) 
+hm.palette <- colorRampPalette(rev(brewer.pal(4, 'RdBu')), space='Lab')
+ggplot(data=hmap_attr_leg_cor_m, aes(Var1, Var2)) + geom_tile(aes(fill=value)) + ggtitle("Correlación 
+de Atributos - Legendarios") + scale_fill_gradientn(colours = hm.palette(100)) + coord_equal()
+```
+
+### Análisis de la efectividad de los Pokémon basados en su tipo de ataque primario. 
+Se quiere encontrar la efectividad de los Pokémon basados en su tipo de ataque primario contra otros pokemones.
+```{r warning=FALSE}
+# se vuelve a cargar el dataset
+df= (read.csv(file.choose(), header=T, encoding = "UTF-8")) 
+attach(df) 
+ 
+df = tibble::as_tibble(df) 
+colnames(df)[25] <- "classification" 
+df$capture_rate <- as.numeric(df$capture_rate) 
+ 
+ 
+# Para esto seleccionamos un sub-conjunto de los datos:
+ 
+df_fight_against <- select(df, type1, against_bug:against_water) 
+head(df_fight_against) 
+ 
+# Se deben encontrar la mediana de todas las columnas against_type 
+ 
+df_fight_against_g <- group_by(df_fight_against, type1) 
+ 
+df_fight_against_summ <- summarise(df_fight_against_g,  
+                                   against_bug = median(against_bug),  
+                                   against_dark = median(against_dark),  
+                                   against_dragon = median(against_dragon), 
+                                   against_electric = median(against_electric), 
+                                   against_fairy = median(against_fairy), 
+                                   against_fight = median(against_fight), 
+                                   against_fire = median(against_fire), 
+                                   against_flying = median(against_flying), 
+                                   against_ghost = median(against_ghost), 
+                                   against_grass = median(against_grass), 
+                                   against_ground = median(against_ground), 
+                                   against_ice = median(against_ice), 
+                                   against_normal = median(against_normal),
+                                   against_poison = median(against_poison),
+                                   against_psychic = median(against_psychic),
+                                   against_rock = median(against_rock),
+                                   against_steel = median(against_steel),
+                                   against_water = median(against_water))
+ 
+df_fight_against_long <- melt(df_fight_against_summ)
+hm.palette <- colorRampPalette(rev(brewer.pal(9, 'RdYlBu')), space='Lab')
+ 
+ggplot(data=df_fight_against_long, aes(type1, variable)) + geom_tile(aes(fill=value)) +
+scale_fill_gradientn(colours = hm.palette(100)) + coord_equal() + 
+theme(axis.text.x=element_text(angle=90, hjust=0)) + ggtitle("Efectividad por tipo de Pokemon")
+```
