@@ -19,13 +19,11 @@ lang: es
 
 ### Estudiantes:
 
-- [Milton]
-- [Archibald Emmanuel Carrion Claeys, C01736]
+- Milton Sojo Córdoba, C17546
+- Archibald Emmanuel Carrion Claeys, C01736
 \vspace{5cm}
 
 ***
-
-**Para el Profesor:**
 
 **Nota:** \hrulefill
 
