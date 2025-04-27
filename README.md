@@ -1,24 +1,25 @@
-# Exploratory data analysis Pokemon dataset
-Exploratory data analysis (EDA) of the Pokemon dataset
+# Experiments and data analysis
 
-## Execution and Environment Setup
+## Overview
+This repository contains the code and data that I used in class of Design of Experiments (DoE), multiple dataset were used, goind from pokemon to network data. The goal of the experiments was to understand how to use DoE in different scenarios and how to analyze the data using different methods.
 
-I project was developed using R and VSCode. The following packages are required to run the code:
-```r
-install.packages("dplyr")
+### Structure of the repository
+```txt
+Experiments-and-data-analysis
+├── README.md
+├── exploratory_data_analysis_pokemon_dataset
+│   ├── Lab2 Analisis exploratorio de datos.docx
+│   ├── Lab2 Analisis exploratorio de datos.pdf
+│   ├── README.md
+│   ├── pokemon.csv
+│   ├── pokemon_EDA.pdf
+│   └── pokemon_EDA.rmd
+└── simple_comparative_designs
+    ├── Lab 3. Prueba t de dos muestras 2025.pdf
+    └── red2025aleatorio.csv
 ```
 
 
-In addition, to compile the project to PDF, you can use the following command in your terminal:
-
-```bash
-install.packages("rmarkdown")
-install.packages("tinytex")
-tinytex::install_tinytex()
-```
-
-It will generate a PDF file called pokemon_EDA.pdf in the root directory of the project.
-
-
-## Dataset
-The dataset used in this project is the Pokemon dataset, which contains information about various Pokemon characters, including their attributes, types, and stats. The dataset can be found on [Kaggle](https://www.kaggle.com/datasets/rounakbanik/pokemon).
+## Related repositories
+- [Machine learning couse](https://github.com/archibald-carrion/Machine-learning-course) contains the code and data used in the machine learning course, some of the code in this repository uses methods and concepts of design of experiments, so it is a good idea to check it out.
+- [Pizzeria optimization](https://github.com/archibald-carrion/Pizzeria-optimization) analyze how to open a successful pizzeria in the city of San Jose, Costa Rica.
