@@ -1,0 +1,243 @@
+---
+title: "lab_5"
+output: pdf_document
+date: "2025-05-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importar dependencias
+
+```{r imports}
+if (!requireNamespace("tidyverse", quietly = TRUE)) {
+  install.packages("tidyverse")
+}
+
+library(tidyverse)
+```
+
+
+```{r}
+IDE= (read.csv(file.choose(), header=T, encoding = "UTF-8"))
+attach(IDE)
+head(IDE)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Verificar la estructura
+```{r}
+str(IDE)
+```
+
+## Convertir Experiencia como factor y recodificar los niveles
+
+```{r}
+a <- factor (IDE$Experiencia,
+ levels = c(0.5, 1, 2),
+ labels = c("Nov", " Int", " Ava"))
+str(IDE)
+```
+## Revisión general de datos
+
+Creamos tabla de frecuencia.
+
+```{r}
+table(IDE$Herramienta, IDE$Experiencia)
+```
+Q1 ¿Qué información obtenemos de la tabla anterior?
+Tenemos la misma frecuencia para ambos editores y para cada columna de nivel de experiencia, lo cual no nos permtie conseguir mucho mas informacion aparte que son todos iguales. Mas bien pareceria que son datos sinteticos, ya que no tienen variacion entre ellos.
+
+
+Calculamos algunas estadísticas generales de las variables
+```{r}
+group_by(IDE, Experiencia) %>%
+ summarise(
+ count = n(),
+ mean = mean(Duracion, na.rm = TRUE),
+ var = var(Duracion, na.rm = TRUE),
+ sd = sd(Duracion, na.rm = TRUE)
+ )
+
+```
+
+Q2. Similar al anterior, escriba el código R que presente en filas y columnas la media, varianza y
+desviación estándar del factor “Herramienta”. Muestre el código y el resultado obtenido.
+
+```{r}
+library(dplyr)
+
+IDE %>%
+  group_by(Herramienta) %>%
+  summarise(
+    mean = mean(Duracion, na.rm = TRUE),
+    var = var(Duracion, na.rm = TRUE),
+    sd = sd(Duracion, na.rm = TRUE)
+  )
+```
+Ahora veamos el detalle agrupando tanto “Herramienta” como “Experiencia”:
+
+```{r}
+group_by(IDE, Herramienta, Experiencia) %>%
+ summarise(
+ count = n(),
+ mean = mean(Duracion, na.rm = TRUE),
+ var = var(Duracion, na.rm = TRUE),
+ sd = sd(Duracion, na.rm = TRUE)
+ )
+```
+Creamos boxplots para las variables
+
+```{r}
+boxplot(Duracion ~ Herramienta, data=IDE, frame = FALSE,
+ col = c("#00AFBB", "#E7B800"), ylab=" Duracion")
+
+```
+
+Q3 ¿Qué parece indicar el boxplot anterior viendo las medianas y la variabilidad?
+
+Vemos que los dos cuartiles centrales estan en el mismo rango rodeando una duracion de 15, por lo que las medianas no deberian de ser muy differentes, en terminos de variabilidad, vemos que Intellij tiene extremos mas grandes que VSCode.
+
+Q4 Cree un diagrama similar al anterior para la variable “Experiencia”. Presente el código y el
+gráfico resultante.
+
+```{r}
+boxplot(Experiencia ~ Herramienta, data=IDE, frame = FALSE,
+ col = c("#00AFBB", "#E7B800"), ylab=" Duracion")
+```
+Q5 ¿Qué parece indicar el boxplot anterior viendo las medianas y la variabilidad?
+
+Ambos boxplot son iguales, tienen mismos extremos y cuartiles, lo cual es lo esperado segun lo viste anterior que tienen mismo valores.
+
+
+## Duración en horas por combinación de Herramienta y Experiencia
+```{r}
+boxplot(Duracion ~ Herramienta * Experiencia, data=IDE, frame = FALSE,
+ col = c("#00AFBB", "#E7B800"), ylab="Duracion")
+```
+## Invirtiendo las variables independientes
+```{r}
+boxplot(Duracion ~ Experiencia * Herramienta, data=IDE, frame = FALSE,
+ col = c("#00AFBB", "#E7B800"), ylab="Duracion")
+```
+Q6 ¿Hay información adicional que pueda extraer de los dos boxplots anteriores?
+
+Ademas de la duracion, sacamos informacion sobre el nivel de experiencia, es un grafico que me parece mucho mas valioso que el grafico anterior que solo tenia informaciones puntuales, aqui tenemos mas detalles, pero tabien cuesta tener una vision global, en cual caso los boxplots anteriores tendrian mas sentido.
+
+```{r}
+IDE %>%
+ ggplot() +
+ aes(x = Herramienta, color = Experiencia, group = Experiencia, y = Duracion) +
+ stat_summary(fun = mean, geom = "point") +
+ stat_summary(fun = mean, geom = "line")
+```
+
+Q7 Cree un diagrama similar al anterior pero agrupando por la variable “Herramienta”. Presente el código y el gráfico resultante.
+
+```{r}
+IDE %>%
+  ggplot(aes(x = Experiencia, color = Herramienta, group = Herramienta, y = Duracion)) +
+  stat_summary(fun = mean, geom = "point", size = 3) +
+  stat_summary(fun = mean, geom = "line", size = 1) +
+  labs(x = "Experiencia", y = "Duracion", title = "Duracion por Experiencia y Herramienta") +
+  theme_minimal()
+```
+
+Q8 ¿Qué puede deducir de los gráficos anteriores? ¿Existe interacción entre las variables para
+alguno de los niveles de los factores?
+
+Pareceria que no existe una clara differencia en el primer grafico entre los dos editores, pero en el segundo grafico si se nota un patron con relacion a la experiencia, ya que para el rango de 1.0 a 2.0 IntelliJ tiene una duracin menor a VSCode, de mas de 1unidad de tiempo u hast mas de 2.5unidad de tiempo.
+
+Otra herramienta para crear estos gráficos es interaction.plot()
+
+```{r}
+interaction.plot(x.factor = IDE$Experiencia, trace.factor = IDE$Herramienta,
+ response = IDE$Duracion, fun = mean,
+ type = "b", legend = TRUE,
+ xlab = "Experiencia", ylab="Duración en horas",
+ pch=c(1,19), col = c("#00AFBB", "#E7B800"))
+```
+
+Q9. Construya un gráfico equivalente para ver las interacciones donde el factor x es de la variable
+“Herramienta” y el factor de trace es la varible “Experiencia”. Muestre el código y el gráfico
+resultante.
+
+```{r}
+interaction.plot(x.factor = IDE$Herramienta, trace.factor = IDE$Experiencia,
+ response = IDE$Duracion, fun = mean,
+ type = "b", legend = TRUE,
+ xlab = "Experiencia", ylab="Duración en horas",
+ pch=c(1,19), col = c("#00AFBB", "#E7B800"))
+```
+# Calculamos la prueba ANOVA de dos vías
+Queremos saber si la duración en horas depende del Herramienta y la Experiencia.
+La función aov () se puede usar para responder esta pregunta.
+La función summary.aov () se utiliza para resumir el modelo de análisis de varianza. También puede
+usar la función summary().
+Vamos a establecer un nivel de significación (Alpha) de 0.05 para todas las pruebas Anova que se
+presentan seguidamente
+
+## ANOVA de dos vías sin interacción de las variables independientes (signo +)
+
+```{r}
+res.aov <- aov(Duracion ~ Herramienta + Experiencia, data = IDE)
+summary(res.aov)
+```
+Q10 ¿Qué información nos da esta prueba ANOVA sin interacción? ¿Depende la duración en horas
+del Herramienta y/o de la Experiencia?
+
+
+Analizando los resultados para Herramientas y Experiencia, vemos que experiencia tiene un p value menor a 0.05, por lo que si tiene un efecto estadisticamente significativo, donde la experiencia tiene un p value de 0.172, lo que implica que no tenemos evidencia que tenga un efecto estadisticamente significativo.
+Eso signfica que la experiencia del usuario impacta el tiempo de uso, pero que la herramienta no impacta el tiempo de uso.
+
+## ANOVA de 2 vías con efecto de interacción
+### metodo 1
+```{r}
+res.aov_inter <- aov(Duracion ~ Herramienta * Experiencia, data = IDE)
+summary(res.aov_inter)
+```
+### metodo 2
+```{r}
+res.aov_inter2 <- aov(Duracion ~ Herramienta + Experiencia + Herramienta:Experiencia, data = IDE)
+summary(res.aov_inter2)
+```
+
+Q11 ¿Qué información nos da esta prueba ANOVA con interacción? ¿Depende la duración en horas del Herramienta y/o la Experiencia? ¿Hay interacción entre Experiencia y Herramienta?
+
+
+
+
+## Múltiples comparaciones por pares
+Como la prueba ANOVA es significativa, podemos calcular TukeyHSD (Tukey Honest Significant
+Differences, R function: TukeyHSD ()) para realizar múltiples comparaciones por pares entre las
+medias de los grupos. La función TukeyHD () toma el ANOVA ajustado como argumento.
+Dado que el ANOVA sí encontró interacción entre variables, utilizaremos el modelo que sí incluye la
+interacción de los factores (res.aov_inter).
+La prueba la podemos realizar indicando que se quiere comparar solo los niveles del factor
+“Experiencia”.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
