@@ -1,0 +1,205 @@
+---
+title: "Laboratorio #4:  ANOVA de una vía"
+output: pdf_document
+---
+
+## Primera parte – Ejercicio guiado y conceptos
+### 1 Cargue el archivo weight.csv en RStudio
+
+Primero cargaremos el archivo bd_server.csv y aseguraremos que la columna "motor" sea interpretada como un factor.
+
+```{r cargar_datos_0}
+# Cargar el archivo
+bd_server <- read.csv("bd_server.csv", header = TRUE, encoding = "UTF-8")
+
+# Asegurar que la columna motor sea un factor
+bd_server$motor <- as.factor(bd_server$motor)
+```
+
+Verificamos la estructura de los datos para asegurarnos de que la columna "motor" sea un factor:
+
+```{r verificar_estructura_0}
+summary(bd_server)
+```
+
+### 2 Revise las primeras 6 lineas del dataframe
+
+Revisamos las primeras filas del conjunto de datos para entender su estructura:
+
+```{r revisar_datos_0}
+head(bd_server)
+```
+
+El dataframe muestra el motor de base de datos utilizado y el tiempo de respuesta en milisegundos para cada prueba.
+
+
+### 3 Calculamos la media y la desviación estándar para cada tratamiento
+
+Calculamos la media y la desviación estándar del tiempo de respuesta para cada motor de base de datos:
+
+```{r}
+if (!requireNamespace("dplyr", quietly = TRUE)) {
+  install.packages("dplyr")
+}
+library(dplyr)
+```
+
+```{r estadisticas_descriptivas}
+bd_server %>%
+  group_by(motor) %>%
+  summarise(media = mean(respuesta),
+            desv_est = sd(respuesta))
+```
+
+
+### 4 También creamos un diagrama de cajas para cada uno de los tres programas para visualizar la distribución de la pérdida de peso para cada programa
+Creamos un diagrama de cajas para visualizar la distribución del tiempo de respuesta para cada motor de base de datos:
+
+```{r boxplot}
+boxplot(respuesta ~ motor,
+        data = bd_server,
+        main = "Tiempo de respuesta por motor de base de datos",
+        xlab = "Motor de BD",
+        ylab = "Tiempo de respuesta (ms)",
+        col = "steelblue",
+        border = "black")
+```
+
+Los diagramas de caja nos permiten visualizar la distribución del tiempo de respuesta para cada motor de base de datos, mostrándonos la mediana, los cuartiles y los posibles valores atípicos.
+
+### 5 Modelo de datos e hipótesis nula y alternativa
+
+Definimos el modelo de datos para este ANOVA utilizando el modelo de los efectos:
+
+$$Y_{ij} = \mu + \tau_i + \varepsilon_{ij}$$
+
+Donde:
+- $\mu$ es un parámetro común a todos los tratamientos (la media global)
+- $\tau_i$ es el efecto del tratamiento i-ésimo, donde i = 1 corresponde a PostgreSQL, i = 2 corresponde a MySQL, i = 3 corresponde a MongoDB e i = 4 corresponde a Redis.
+- j = 1, 2, ..., 12 corresponde a cada una de las repeticiones.
+- $\varepsilon_{ij}$ representa los errores del modelo, que siguen una distribución normal e independiente con media 0 y varianza $\sigma^2$.
+
+Las hipótesis a probar son:
+
+- $H_0: \tau_1 = \tau_2 = \tau_3 = \tau_4 = 0$ (los efectos de los motores de base de datos son iguales)
+- $H_1:$ Al menos un $\tau_i \neq 0$ (al menos un motor tiene un efecto diferente)
+
+Alternativamente, en términos de medias:
+- $H_0: \mu_1 = \mu_2 = \mu_3 = \mu_4$ (las medias de tiempo de respuesta son iguales)
+- $H_1:$ Al menos dos medias son diferentes
+
+Establecemos un nivel de significancia de 0.05 para todas las pruebas de este análisis.
+
+### 6 Ajuste del modelo ANOVA unidireccional
+
+Procedemos a ajustar el modelo ANOVA de una vía:
+
+```{r ajuste_modelo}
+modelo <- aov(respuesta ~ motor, data = bd_server)
+summary(modelo)
+```
+
+### 7 Comprobación de los supuestos del modelo
+Para que los resultados del ANOVA sean válidos, debemos verificar que se cumplan los siguientes supuestos:
+
+### 7.1 Normalidad de los residuales
+
+Primero, graficamos el QQ-plot de los residuales para evaluar visualmente la normalidad:
+
+```{r qq_plot}
+plot(modelo, which = 2)
+```
+
+### 7.2 Homogeneidad de varianzas
+
+Evaluamos la igualdad de varianzas a través del gráfico de residuales vs valores ajustados:
+
+```{r residuales_vs_ajustados}
+plot(modelo, which = 1)
+```
+
+### 7.3 Independencia de los residuales
+
+Graficamos los residuales en función del orden de las observaciones para evaluar la independencia:
+
+```{r independencia}
+# Añadimos una columna con el orden de las observaciones
+bd_server$obs <- 1:nrow(bd_server)
+
+# Graficamos los residuales vs el orden de las observaciones
+residuos <- residuals(modelo)
+plot(bd_server$obs, residuos,
+     main = "Residuales vs Tiempo",
+     xlab = "Orden de observación",
+     ylab = "Residuales",
+     pch = 20,
+     col = "blue")
+abline(h = 0, col = "red", lty = 2)
+```
+
+### 8 Para probar formalmente el supuesto de normalidad debemos ejecutar la prueba Shapiro Wilks sobre los residuales. Usamos el mismo razonamiento de hipótesis nula e hipótesis alternativa. En este caso la hipótesis nula es que los residuales siguen una distribución normal, mientr que la alternativa sería que los residuales no siguen una distribución normal.
+
+### 8.1 Prueba de normalidad
+
+Realizamos la prueba de Shapiro-Wilk para evaluar formalmente la normalidad de los residuales:
+
+```{r shapiro_test}
+shapiro.test(modelo$residuals)
+```
+
+### 8.2 Prueba de homogeneidad de varianzas
+
+Realizamos las pruebas de Bartlett y Levene para evaluar la igualdad de varianzas:
+
+```{r bartlett_test}
+bartlett.test(respuesta ~ motor, data = bd_server)
+```
+
+```{r levene_test}
+library(car)
+leveneTest(respuesta ~ motor, data = bd_server)
+```
+
+
+### 9 Análisis de las diferencias de tratamiento
+
+Si el ANOVA resultó significativo, procedemos a realizar pruebas post-hoc para determinar cuáles motores de base de datos difieren entre sí:
+
+```{r tukey_test}
+TukeyHSD(modelo, conf.level = 0.95)
+```
+
+### 10. También podemos visualizar los intervalos de confianza del 95 % que resultan de la prueba de Tukey usando la función plot(TukeyHSD()) en R
+
+Visualizamos los intervalos de confianza del 95% que resultan de la prueba de Tukey:
+
+```{r tukey_plot}
+plot(TukeyHSD(modelo, conf.level = 0.95))
+```
+
+### 11 Reportando los resultados de una ANOVA de una vía
+Calculamos el tamaño del efecto (eta cuadrado) para determinar la proporción de la varianza total que es explicada por el factor "motor":
+
+```{r eta_squared}
+# install the package lsr if not already installed
+if (!requireNamespace("lsr", quietly = TRUE)) {
+  install.packages("lsr")
+}
+library(lsr)
+etaSquared(modelo, anova = TRUE)
+```
+
+### 12 También, en R puede obtenerse mediante la función etaSquared() de paquete lsr.
+
+Calculamos la potencia del test para determinar la probabilidad de detectar correctamente un efecto significativo:
+
+```{r potencia}
+# Extraemos las sumas de cuadrados del modelo
+anova_results <- summary(modelo)[[1]]
+between_var <- anova_results[1, "Mean Sq"]
+within_var <- anova_results[2, "Mean Sq"]
+
+power.anova.test(groups = 4, n = 12, between.var = between_var, within.var = within_var, sig.level = 0.05)
+```
+
+### 13 Para determiner la potencia
