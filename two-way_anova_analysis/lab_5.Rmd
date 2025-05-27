@@ -206,8 +206,9 @@ summary(res.aov_inter2)
 
 Q11 ¿Qué información nos da esta prueba ANOVA con interacción? ¿Depende la duración en horas del Herramienta y/o la Experiencia? ¿Hay interacción entre Experiencia y Herramienta?
 
-
-
+Esta prueba evalúa si existen diferencias significativas en la duración (en horas) según dos factores: Herramienta y Experiencia y si existe una interacción entre ambos factores.
+Para la herramienta parece que no hay efecto significativo (p = 0.1560 > 0.05). Esto significa que el tipo de herramienta por sí solo no afecta significativamente la duración.
+Pero parece que la experiencia si tiene un efecto muy significativo (p = 9.85e-11 < 0.001, marcado con ***). La experiencia tiene un impacto altamente significativo en la duración, explicando una gran parte de la variabilidad (Sum Sq = 432.9).
 
 ## Múltiples comparaciones por pares
 Como la prueba ANOVA es significativa, podemos calcular TukeyHSD (Tukey Honest Significant
@@ -218,26 +219,12 @@ interacción de los factores (res.aov_inter).
 La prueba la podemos realizar indicando que se quiere comparar solo los niveles del factor
 “Experiencia”.
 
+```{r}
+TukeyHSD(res.aov_inter, which = "Herramienta")
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```{r}
+# Gráfico de intervalos de confianza para Experiencia
+par(mar = c(2, 6, 2, 2))
+plot(TukeyHSD(res.aov_inter, conf.level=.95, which = "Experiencia"), las = 1)
+```
