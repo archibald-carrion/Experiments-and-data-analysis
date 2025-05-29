@@ -225,6 +225,84 @@ TukeyHSD(res.aov_inter, which = "Herramienta")
 
 ```{r}
 # Gráfico de intervalos de confianza para Experiencia
+IDE$Experiencia <- factor(IDE$Experiencia, levels = c("Nov", "Int", "Ava"))
+
+
 par(mar = c(2, 6, 2, 2))
 plot(TukeyHSD(res.aov_inter, conf.level=.95, which = "Experiencia"), las = 1)
 ```
+
+Q12 ¿Qué se puede deducir del Tukey anterior sobre el factor Experiencia?
+
+El test de Tukey para el factor Herramienta muestra que no hay diferencias estadísticamente significativas entre los niveles de Herramienta, ya que el intervalo de confianza incluye el cero y el valor p es mayor a 0.05. Por lo tanto, no se puede concluir que la duración difiera entre VSCode e IntelliJ.
+
+
+```{r}
+TukeyHSD(res.aov_inter, which = "Herramienta")
+```
+
+**Q13 ¿Tiene sentido analizar las comparaciones múltiples de "Herramienta"?**
+Tiene sentido analizar las comparaciones múltiples de "Herramienta" porque permiten identificar diferencias significativas entre las medias de cada grupo.
+Pero en este caso específico, el valor p ajustado (p adj = 0.156) es mayor que 0.05, lo que indica que no hay una diferencia estadísticamente significativa entre las herramientas comparadas. 
+Por lo que los resultados sugieren que no existen diferencias significativas entre las herramientas evaluadas en este conjunto de datos.
+
+```{r}
+TukeyHSD(res.aov_inter)
+```
+
+**Q14 Presenta la parte de los resultados con las combinaciones Herramienta:Experiencia, señalando en cuáles comparaciones de tratamientos sí hay diferencia significativa.**
+
+No se observa diferencia significativa en la comparación de tratamientos, ya que el valor p ajustado (0.156) es mayor que 0.05. Por lo tanto, no hay combinaciones Herramienta:Experiencia con diferencias estadísticamente significativas en este resultado.
+
+```{r}
+hist(res.aov_inter$residuals, main="Histograma de Residuales")
+```
+
+```{r}
+qqnorm(res.aov_inter$residuals)
+qqline(res.aov_inter$residuals)
+```
+
+**Q15 ¿Qué puede deducir de los gráficos anteriores? ¿Parecen seguir una distribución normal?**
+
+Los datos no siguen una distribución normal perfecta, pero se acerca mucho a una distribución normal.
+
+```{r}
+shapiro.test(res.aov_inter$residuals)
+```
+
+**Q16 ¿Siguen los residuales una distribución normal? Justifique su respuesta.**
+
+Los residuales no siguen una distribución normal estrictamente ya que el valor p (0.05029) del test de Shapiro-Wilk está muy cerca del umbral de 0.05.
+No es menor a 0.05 pero está en el límite, por lo que no se puede afirmar con seguridad la normalidad pero tampoco se puede rechazar.
+
+
+```{r}
+plot(res.aov_inter$residuals, main="Gráfico de Residuales")
+```
+
+**Q17 ¿Dado el gráfico anterior podría intuir que son independientes?**
+
+El gráfico no muestra patrones sistemáticos en los residuales, mas bien parece ser aleatorio, sugiriendo independencia de las observaciones.
+
+
+
+```{r}
+plot(res.aov_inter, 1)
+```
+
+**Q18 ¿Dado el gráfico anterior se podría intuir que las varianzas son homogéneas?**
+
+La dispersión de residuales es relativamente constante (líneas verticales) a lo largo de los valores ajustados, sugiriendo homogeneidad de varianzas.
+
+```{r}
+inter <- interaction(IDE$Experiencia, IDE$Herramienta)
+bartlett.test(Duracion ~ inter, data = IDE)
+```
+
+**Q19 ¿Se puede afirmar que las varianzas de los residuales son homogéneas? Explique.**
+
+
+
+
+
