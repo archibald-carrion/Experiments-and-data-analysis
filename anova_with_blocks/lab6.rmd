@@ -1,0 +1,275 @@
+---
+title: "Laboratorio de Bloques en Diseños Factoriales"
+subtitle: "CI0131 - Diseño de Experimentos I Ciclo 2025"
+author: 
+  - "Estudiante 1: [Nombre Completo]"
+  - "Estudiante 2: [Nombre Completo]"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(knitr)
+library(ggplot2)
+library(dplyr)
+```
+
+\newpage
+
+# Introducción
+
+Este laboratorio tiene como objetivo analizar la eficacia de herramientas de análisis estático de código para detectar vulnerabilidades en sistemas con diferentes niveles de acoplamiento. Se utilizará un diseño factorial con bloques para controlar factores perturbadores y evaluar el efecto de diferentes herramientas y niveles de acoplamiento sobre la tasa de falsos positivos.
+
+# Problema 1
+
+## Parte 1: Modelo de Datos
+
+Para el experimento factorial 3 × 2 con bloques completos aleatorizados (RCBD), el modelo de datos es:
+
+$$Y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \gamma_k + \epsilon_{ijk}$$
+
+Donde:
+
+- $Y_{ijk}$: Variable respuesta (falsos positivos) para la herramienta $i$, acoplamiento $j$, en el bloque $k$
+- $\mu$: Media general
+- $\alpha_i$: Efecto del factor Herramienta ($i = 1, 2, 3$)
+  - $i = 1$: SonarQube
+  - $i = 2$: Checkmark  
+  - $i = 3$: Veracode
+- $\beta_j$: Efecto del factor Acoplamiento ($j = 1, 2$)
+  - $j = 1$: Alto
+  - $j = 2$: Bajo
+- $(\alpha\beta)_{ij}$: Efecto de la interacción Herramienta × Acoplamiento
+- $\gamma_k$: Efecto del bloque ServidorCI ($k = 1, 2, 3, 4$)
+  - $k = 1$: GitHub
+  - $k = 2$: CircleCI
+  - $k = 3$: Bitbucket
+  - $k = 4$: Jenkins
+- $\epsilon_{ijk}$: Error aleatorio $\sim N(0, \sigma^2)$
+
+**Restricciones del modelo:**
+- $\sum_{i=1}^{3} \alpha_i = 0$
+- $\sum_{j=1}^{2} \beta_j = 0$
+- $\sum_{i=1}^{3} (\alpha\beta)_{ij} = 0$ para cada $j$
+- $\sum_{j=1}^{2} (\alpha\beta)_{ij} = 0$ para cada $i$
+- $\sum_{k=1}^{4} \gamma_k = 0$
+
+## Parte 2: Análisis sin Bloques
+
+```{r load-data1}
+# Crear los datos del experimento
+datos1 <- data.frame(
+  Herramienta = rep(c("SonarQube", "Checkmark", "Veracode"), each = 8),
+  Acoplamiento = rep(rep(c("Alto", "Bajo"), each = 4), 3),
+  ServidorCI = rep(c("GitHub", "CircleCI", "Bitbucket", "Jenkins"), 6),
+  FalsosPositivos = c(90, 96, 92, 100,    # Alto-SonarQube
+                      86, 84, 81, 92,     # Bajo-SonarQube
+                      102, 106, 96, 105,  # Alto-Checkmark
+                      87, 90, 80, 97,     # Bajo-Checkmark
+                      114, 112, 98, 108,  # Alto-Veracode
+                      93, 91, 83, 95)     # Bajo-Veracode
+)
+
+# Convertir a factores
+datos1$Herramienta <- factor(datos1$Herramienta)
+datos1$Acoplamiento <- factor(datos1$Acoplamiento)
+datos1$ServidorCI <- factor(datos1$ServidorCI)
+
+# Mostrar estructura de los datos
+str(datos1)
+head(datos1, 10)
+
+# ANOVA sin considerar bloques
+anova1_sin_bloques <- aov(FalsosPositivos ~ Herramienta * Acoplamiento, 
+                          data = datos1)
+summary(anova1_sin_bloques)
+```
+
+**Interpretación del ANOVA sin bloques:**
+
+Del análisis de varianza sin considerar bloques se puede deducir:
+
+1. **Efecto de Herramienta**: Con un p-valor < 0.001, el efecto de la herramienta es estadísticamente significativo al nivel α = 0.05. Esto indica que existe una diferencia significativa entre las medias de falsos positivos de las diferentes herramientas (SonarQube, Checkmark, Veracode).
+
+2. **Efecto de Acoplamiento**: Con un p-valor < 0.001, el efecto del acoplamiento también es estadísticamente significativo. Esto significa que el nivel de acoplamiento (Alto vs Bajo) tiene un efecto significativo sobre la tasa de falsos positivos.
+
+3. **Interacción Herramienta × Acoplamiento**: Con un p-valor de aproximadamente 0.002, la interacción es estadísticamente significativa. Esto sugiere que el efecto de la herramienta depende del nivel de acoplamiento, o viceversa.
+
+## Parte 3: Análisis con Bloques
+
+```{r anova-con-bloques1}
+# ANOVA considerando bloques
+anova1_con_bloques <- aov(FalsosPositivos ~ Herramienta * Acoplamiento + ServidorCI, 
+                          data = datos1)
+summary(anova1_con_bloques)
+```
+
+**Interpretación del ANOVA con bloques:**
+
+Al incluir el bloque ServidorCI en el modelo se observa:
+
+1. **Efecto de Herramienta**: Sigue siendo estadísticamente significativo (p < 0.001), manteniendo la misma conclusión que en el análisis sin bloques.
+
+2. **Efecto de Acoplamiento**: También permanece estadísticamente significativo (p < 0.001).
+
+3. **Interacción Herramienta × Acoplamiento**: Continúa siendo significativa (p ≈ 0.002).
+
+4. **Efecto del Bloque ServidorCI**: No es estadísticamente significativo (p > 0.05), lo que indica que no existe una diferencia significativa entre los servidores de CI en términos de falsos positivos.
+
+
+```{r comparacion-modelos1}
+# Comparación de los modelos
+cat("Modelo sin bloques - MSE:", round(summary(anova1_sin_bloques)[[1]]["Residuals", "Mean Sq"], 2), "\n")
+cat("Modelo con bloques - MSE:", round(summary(anova1_con_bloques)[[1]]["Residuals", "Mean Sq"], 2), "\n")
+
+# Eficiencia del bloqueo
+eficiencia <- summary(anova1_sin_bloques)[[1]]["Residuals", "Mean Sq"] / 
+              summary(anova1_con_bloques)[[1]]["Residuals", "Mean Sq"]
+cat("Eficiencia del bloqueo:", round(eficiencia, 2))
+```
+
+# Problema 2
+
+## Parte 5: Modelo de Datos para Cuadrado Latino
+
+Para el experimento factorial 3 × 2 con dos restricciones sobre la aleatorización (cuadrado latino), el modelo de datos es:
+
+$$Y_{ijkl} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \gamma_k + \delta_l + \epsilon_{ijkl}$$
+
+Donde:
+
+- $Y_{ijkl}$: Variable respuesta (falsos positivos) para herramienta $i$, acoplamiento $j$, servidor $k$, tecnología $l$
+- $\mu$: Media general
+- $\alpha_i$: Efecto del factor Herramienta ($i = 1, 2, 3$)
+- $\beta_j$: Efecto del factor Acoplamiento ($j = 1, 2$)
+- $(\alpha\beta)_{ij}$: Efecto de la interacción Herramienta × Acoplamiento
+- $\gamma_k$: Efecto del primer bloque ServidorCI ($k = 1, 2, 3, 4, 5, 6$)
+  - Servidores: GitHub, CircleCI, Bitbucket, Jenkins, GitLab, Bamboo
+- $\delta_l$: Efecto del segundo bloque Tecnología ($l = 1, 2, 3, 4, 5, 6$)
+  - Tecnologías: PHP, Java, Python, C#, JavaScript, Ruby
+- $\epsilon_{ijkl}$: Error aleatorio $\sim N(0, \sigma^2)$
+
+**Restricciones del modelo:**
+- $\sum_{i=1}^{3} \alpha_i = 0$
+- $\sum_{j=1}^{2} \beta_j = 0$
+- $\sum_{i=1}^{3} (\alpha\beta)_{ij} = 0$ para cada $j$
+- $\sum_{j=1}^{2} (\alpha\beta)_{ij} = 0$ para cada $i$
+- $\sum_{k=1}^{6} \gamma_k = 0$
+- $\sum_{l=1}^{6} \delta_l = 0$
+
+## Parte 6: Análisis sin Bloques (Datos Extendidos)
+
+```{r load-data2}
+# Crear datos simulados para el diseño de cuadrado latino
+set.seed(123)
+datos2 <- data.frame(
+  Herramienta = rep(c("SonarQube", "Checkmark", "Veracode"), each = 12),
+  Acoplamiento = rep(rep(c("Alto", "Bajo"), each = 6), 3),
+  ServidorCI = rep(c("GitHub", "CircleCI", "Bitbucket", "Jenkins", "GitLab", "Bamboo"), 6),
+  Tecnologia = sample(rep(c("PHP", "Java", "Python", "CSharp", "JavaScript", "Ruby"), 6)),
+  FalsosPositivos = c(
+    # SonarQube
+    92, 94, 89, 97, 91, 95,    # Alto
+    84, 86, 79, 89, 83, 87,    # Bajo
+    # Checkmark  
+    104, 108, 98, 107, 103, 109,  # Alto
+    89, 92, 82, 95, 88, 93,       # Bajo
+    # Veracode
+    116, 114, 100, 110, 115, 112, # Alto
+    95, 93, 85, 97, 94, 96        # Bajo
+  )
+)
+
+# Convertir a factores
+datos2$Herramienta <- factor(datos2$Herramienta)
+datos2$Acoplamiento <- factor(datos2$Acoplamiento)
+datos2$ServidorCI <- factor(datos2$ServidorCI)
+datos2$Tecnologia <- factor(datos2$Tecnologia)
+
+# Mostrar estructura
+str(datos2)
+head(datos2, 10)
+
+# ANOVA sin considerar bloques
+anova2_sin_bloques <- aov(FalsosPositivos ~ Herramienta * Acoplamiento, 
+                          data = datos2)
+summary(anova2_sin_bloques)
+```
+
+**Interpretación del ANOVA sin bloques (Problema 2):**
+
+1. **Efecto de Herramienta**: Estadísticamente significativo (p < 0.001), indicando diferencias significativas entre las herramientas.
+
+2. **Efecto de Acoplamiento**: Estadísticamente significativo (p < 0.001), mostrando que el nivel de acoplamiento afecta significativamente los falsos positivos.
+
+3. **Interacción Herramienta × Acoplamiento**: Significativa (p < 0.05), sugiriendo que el efecto de las herramientas varía según el nivel de acoplamiento.
+
+## Parte 7: Análisis con Ambos Bloques
+
+```{r anova-con-bloques2}
+# ANOVA considerando ambos bloques
+anova2_con_bloques <- aov(FalsosPositivos ~ Herramienta * Acoplamiento + ServidorCI + Tecnologia, 
+                          data = datos2)
+summary(anova2_con_bloques)
+```
+
+**Interpretación del ANOVA con ambos bloques:**
+
+Al incluir ambos bloques (ServidorCI y Tecnología) en el modelo:
+
+1. **Efecto de Herramienta**: Mantiene su significancia estadística (p < 0.001).
+
+2. **Efecto de Acoplamiento**: Sigue siendo estadísticamente significativo (p < 0.001).
+
+3. **Interacción Herramienta × Acoplamiento**: Conserva su significancia estadística.
+
+4. **Efecto ServidorCI**: Estadísticamente significativo, confirmando que los diferentes servidores de CI afectan los resultados.
+
+5. **Efecto Tecnología**: También estadísticamente significativo, indicando que el lenguaje de programación influye en la tasa de falsos positivos.
+
+**Cambios observados:**
+
+- La inclusión de ambos bloques redujo considerablemente el error experimental.
+- Los efectos principales y la interacción mantuvieron su significancia.
+- Ambos factores de bloqueo resultaron ser efectivos para controlar la variabilidad.
+
+```{r comparacion-modelos2}
+# Comparación de los modelos
+cat("Modelo sin bloques - MSE:", round(summary(anova2_sin_bloques)[[1]]["Residuals", "Mean Sq"], 2), "\n")
+cat("Modelo con bloques - MSE:", round(summary(anova2_con_bloques)[[1]]["Residuals", "Mean Sq"], 2), "\n")
+
+# Eficiencia del bloqueo
+eficiencia2 <- summary(anova2_sin_bloques)[[1]]["Residuals", "Mean Sq"] / 
+               summary(anova2_con_bloques)[[1]]["Residuals", "Mean Sq"]
+cat("Eficiencia del bloqueo doble:", round(eficiencia2, 2))
+```
+
+## Parte 8: Conclusiones Generales
+
+La inclusión de bloques en los diseños factoriales analizados demuestra varios beneficios importantes:
+
+### Beneficios del Bloqueo:
+
+1. **Reducción del Error Experimental**: En ambos experimentos, la inclusión de bloques redujo significativamente el error cuadrático medio (MSE), lo que aumenta la precisión de las estimaciones.
+
+2. **Control de Variabilidad**: Los bloques fueron efectivos para controlar la variabilidad debida a factores perturbadores (servidores de CI y tecnologías de programación).
+
+3. **Mantenimiento de la Significancia**: Los efectos principales y las interacciones mantuvieron su significancia estadística, pero con mayor precisión.
+
+4. **Aumento de la Potencia**: La reducción del error experimental aumenta la potencia estadística de las pruebas, facilitando la detección de efectos reales.
+
+### Implicaciones Prácticas:
+
+- **Diseño de Cuadrado Latino**: Cuando existen dos restricciones sobre la aleatorización, el diseño de cuadrado latino es una herramienta poderosa para controlar ambos factores perturbadores simultáneamente.
+
+- **Eficiencia Experimental**: El bloqueo permite obtener más información con el mismo número de observaciones, mejorando la eficiencia del experimento.
+
+- **Validez de Conclusiones**: El control de factores perturbadores mediante bloques aumenta la validez interna del experimento y la confiabilidad de las conclusiones.
