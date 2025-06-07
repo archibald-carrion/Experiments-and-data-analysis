@@ -1,0 +1,158 @@
+---
+title: "lab_clase_05_06"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+date: "2025-05-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importar dependencias
+
+```{r imports}
+if (!requireNamespace("tidyverse", quietly = TRUE)) {
+  install.packages("tidyverse")
+}
+
+library(tidyverse)
+```
+
+
+```{r}
+IDE= (read.csv(file.choose(), header=T, encoding = "UTF-8"))
+attach(IDE)
+```
+
+Renombrar categorías de desarrolladores
+
+```{r}
+IDE$Experiencia <- factor (IDE$Experiencia,
+ levels = c(0.5, 1, 2),
+ labels = c("Nov", "Int", "Ava"))
+```
+
+Ajustar ANOVA con interacción
+
+```{r}
+res.aov_inter <- aov(Duracion ~ Herramienta * Experiencia, data = IDE)
+summary(res.aov_inter)
+```
+Pregunta 1. Indique si :
+1. La variable Experiencia es significativa o no
+2. La variable Herramienta es significativa o no
+3. La interacción entre ambas variables es significativa o no
+
+Experiencia son significativas (1.42e-10< 0.05 ), mientras que la variable Herramienta no lo es (0.1450>0.05 ).
+La intereaccion entre ambas si es significativa (0.0401<0.05)
+
+
+Para determinar qué niveles de Experiencia son los que presentan diferencias se realiza
+prueba de múltiples comparaciones (Tukey)
+```{r}
+TukeyHSD(res.aov_inter, which = "Experiencia")
+```
+
+Pregunta 2. Indique entre qué niveles de la variable Experiencia hay diferencias
+significativas.
+
+Hay diferencias significativas entre los niveles Avanzado y Novato y entre Avanzado e Intermedio, pero no entre Intermedio y Novato.
+
+```{r}
+IDE %>%
+ ggplot() +
+ aes(x = Herramienta, color = Experiencia, group = Experiencia, y = Duracion) +
+ stat_summary(fun = mean, geom = "point") +
+ stat_summary(fun = mean, geom = "line")
+```
+
+```{r}
+IDE %>%
+ ggplot() +
+ aes(x = Experiencia, color = Herramienta, group = Herramienta, y = Duracion) +
+ stat_summary(fun = mean, geom = "point") +
+ stat_summary(fun = mean, geom = "line")
+```
+Sin embargo, los gráficos sólo sirven para un análisis preliminar, pero no determinan dónde
+está la interacción, como sí lo haría un estadístico. Para eso vamos a realizar unos
+contrastes.
+Primero se carga la biblioteca emmeans
+
+```{r}
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
+install.packages("emmeans")
+
+library(emmeans)
+```
+
+
+```{r}
+means_aov <- emmeans(res.aov_inter, ~ Herramienta * Experiencia)
+print(means_aov)
+```
+
+```{r}
+contrast(means_aov, method = list("VSCode_Nov vs IntelliJ_Ava" = c(0, 1, 0, 0, -1, 0)))
+```
+```{r}
+contrast(means_aov,
+ method = list("Interacción Novato - Intermedio" = c(1, -1, -1, 1, 0, 0 )))
+```
+
+El contraste de medias entre Intermedio y Avanzado sería:
+
+```{r}
+contrast(means_aov,
+ method = list("Interacción Intermedio - Avanzado" = c(0, 0, 1, -1, -1, 1)))
+```
+
+
+```{r}
+contrast(means_aov,
+ method = list("Interacción Novato - Avanzado" = c(1, -1, 0, 0, -1, 1)))
+```
+# 1. Ajustar el modelo y calcular las medias marginales
+```{r}
+model <- aov(Duracion ~ Herramienta * Experiencia, data = IDE)
+means <- emmeans(model, ~ Herramienta * Experiencia)
+```
+
+# 2. Definir manualmente los contrastes de interacción
+# (Comparar cómo cambia el efecto de Herramienta entre pares de niveles de Experiencia)
+
+```{r}
+interaction_contrasts <- list(
+ "Interacción Nov vs Int" = c(1, -1, -1, 1, 0, 0), # Efecto en Nov vs Int
+ "Interacción Nov vs Ava" = c(1, -1, 0, 0, -1, 1), # Efecto en Nov vs Ava
+ "Interacción Int vs Ava" = c(0, 0, 1, -1, -1, 1)) # Efecto en Int
+```
+
+# 3. Calcular los contrastes y mostrar resultados
+```{r}
+interaction_results <- contrast(means, method = interaction_contrasts,
+ adjust = "none") # En este caso inicial no se hace ajuste.
+print(interaction_results)
+
+```
+Ahora realicemos los contrastes pero agregando la corrección de Holm-Bonferroni
+
+```{r}
+interaction_results <- contrast(means, method = interaction_contrasts,
+ adjust = "holm")
+print(interaction_results)
+```
+
+Pregunta 3. Dado que los valores p se modifican en el Resultado 10 (con corrección) en
+relación con los Resultados 6, 7 y 8 (individuales), ¿qué se puede decir de las conclusiones
+respecto de la interacción: se mantienen las conclusiones de interacción de cada par de
+Experiencias que se encontraron individualmente o hay alguna que se modifica?
+
+
+
+# Conclusiones
+
+Para los resultados individuales (6, 7 y 8) solo la interacción entre Novato y Avanzado es significativa (p = 0.0126) y después de aplicar la corrección (10) sigue siendo significativa (p = 0.0379) aunque casi se duplica su p-value.
+Las demas interacciones nunca son significativas ya que se mantienen mayor a 0.05.
