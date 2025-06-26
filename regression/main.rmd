@@ -1,0 +1,315 @@
+# Laboratorio de Regresión Lineal Simple y Múltiple
+## Análisis de Datos de Béisbol 2011
+
+**Curso:** CI1031 Diseño de Experimentos I Ciclo 2025  
+**Estudiantes:** [Insertar nombres completos]  
+**Fecha:** Junio 2025
+
+---
+
+## Introducción
+
+Este laboratorio analiza los datos de los 30 equipos de las Grandes Ligas de Béisbol de la temporada 2011, examinando la relación lineal entre las carreras anotadas (runs) y otras estadísticas de jugadores. El objetivo es encontrar qué variables predicen mejor las carreras anotadas por un equipo en una temporada, siguiendo el enfoque analítico presentado en la película "Moneyball".
+
+---
+
+## Primera Parte: Análisis Exploratorio y Regresión Simple
+
+### Carga de Datos
+
+```{r setup, message=FALSE, warning=FALSE}
+# Cargar librerías necesarias
+library(statsr)
+library(car)
+library(mosaic) # Necesario para plot_ss
+
+# Seleccionar archivo de datos de forma interactiva
+file_path <- file.choose()
+beis <- read.csv(file_path, header = TRUE, encoding = "UTF-8")
+attach(beis)
+
+# Verificar estructura de los datos
+str(beis)
+head(beis)
+```
+
+### Análisis de la Relación entre Runs y At-bats
+
+```{r plot-runs-atbats}
+# Crear gráfico de dispersión
+plot(beis$at_bats, beis$runs, 
+     xlab = "At-bats", 
+     ylab = "Runs",
+     main = "Relación entre At-bats y Runs",
+     pch = 16, col = "blue")
+```
+
+**Pregunta 1:** La relación entre runs y at_bats parece mostrar una tendencia lineal positiva. Los puntos se distribuyen de manera que sugieren que a medida que aumentan los at-bats, también tienden a aumentar las carreras anotadas, aunque con cierta dispersión alrededor de una línea imaginaria.
+
+```{r correlation-runs-atbats}
+# Calcular correlación
+correlacion_runs_atbats <- cor(beis$runs, beis$at_bats)
+correlacion_runs_atbats
+```
+
+**Pregunta 2:** La correlación entre runs y at_bats es de 0.610627, lo que indica una correlación positiva.
+
+### Exploración Manual de la Línea de Regresión
+
+
+```{r plot-ss-exploration}
+# Visualización manual de la línea de regresión y residuos
+modelo_manual <- lm(runs ~ at_bats, data = beis)
+plot(beis$at_bats, beis$runs,
+     xlab = "At-bats",
+     ylab = "Runs",
+     main = "Regresión y residuos: Runs vs At-bats",
+     pch = 16, col = "blue")
+abline(modelo_manual, col = "red", lwd = 2)
+# Dibujar residuos (líneas verticales)
+for(i in 1:nrow(beis)) {
+  segments(beis$at_bats[i], beis$runs[i],
+           beis$at_bats[i], fitted(modelo_manual)[i],
+           col = "orange", lty = 2)
+}
+```
+
+**Pregunta 3:** usar otra version, ese solo grafica
+
+### Modelo Lineal Formal
+
+```{r modelo-linear-atbats}
+# Ajustar modelo lineal
+m1 <- lm(runs ~ at_bats, data = beis)
+summary(m1)
+```
+
+**Pregunta 4:** La fórmula del modelo lineal obtenido es:
+ŷ =  -2789.24 + 0.063 * at_bats
+
+```{r plot-regression-line}
+# Gráfico con línea de regresión
+plot(beis$runs ~ beis$at_bats,
+     xlab = "At-bats", 
+     ylab = "Runs",
+     main = "Regresión Lineal: Runs vs At-bats",
+     pch = 16, col = "blue")
+abline(m1, col = "red", lwd = 2)
+```
+
+---
+
+## Segunda Parte: Comparación de Variables Predictoras
+
+### Modelo con Home Runs
+
+```{r modelo-homeruns}
+# Modelo con home runs
+m2 <- lm(runs ~ homeruns, data = beis)
+summary(m2)
+```
+
+
+**Pregunta 5:**
+Ajuste del modelo de regresión lineal usando homeruns para predecir runs:
+
+```r
+m2 <- lm(runs ~ homeruns, data = beis)
+summary(m2)
+```
+
+Salida de summary():
+
+Call:
+lm(formula = runs ~ homeruns, data = beis)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-91.615 -33.410   3.231  24.292 104.631 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 415.2389    41.6779   9.963 1.04e-10 ***
+homeruns      1.8345     0.2677   6.854 1.90e-07 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 51.29 on 28 degrees of freedom
+Multiple R-squared:  0.6266,    Adjusted R-squared:  0.6132 
+F-statistic: 46.98 on 1 and 28 DF,  p-value: 1.9e-07
+
+**Pregunta 6:**
+La ecuación del modelo es:
+ŷ = 415.24 + 1.83 * homeruns
+
+**Pregunta 7:**
+El Múltiple R-Cuadrado de este modelo con homeruns es 0.6266, mayor que el del modelo anterior con at_bats (0.3729). Esto indica que el modelo con homeruns explica una mayor proporción de la variabilidad en runs y, por lo tanto, predice mejor los resultados que el modelo con at_bats.
+
+### Análisis Completo de Variables Tradicionales
+
+```{r analisis-todas-variables}
+# Crear modelos para todas las variables tradicionales
+variables <- c("at_bats", "hits", "homeruns", "bat_avg", "strikeouts", "stolen_bases", "wins")
+resultados <- data.frame(
+  Variable_predictora = variables,
+  Correlacion = numeric(length(variables)),
+  p_value_Modelo = numeric(length(variables)),
+  R2 = numeric(length(variables))
+)
+
+# Calcular métricas para cada variable
+for(i in 1:length(variables)) {
+  var <- variables[i]
+  
+  # Correlación
+  resultados$Correlacion[i] <- cor(beis$runs, beis[[var]])
+  
+  # Modelo y métricas
+  formula_str <- paste("runs ~", var)
+  modelo <- lm(as.formula(formula_str), data = beis)
+  modelo_summary <- summary(modelo)
+  
+  # p-value del modelo (F-statistic)
+  f_stat <- modelo_summary$fstatistic
+  resultados$p_value_Modelo[i] <- pf(f_stat[1], f_stat[2], f_stat[3], lower.tail = FALSE)
+  
+  # R²
+  resultados$R2[i] <- modelo_summary$r.squared
+}
+
+# Mostrar tabla
+print(resultados, row.names = FALSE)
+```
+
+
+
+**Pregunta 8:**
+La siguiente tabla compara las siete variables tradicionales como predictoras de runs, mostrando para cada una el valor de correlación, el p-value del modelo lineal simple y el R² correspondiente. Esta tabla permite identificar cuál variable tiene mayor capacidad predictiva sobre runs:
+
+| Variable predictora | Correlación | p-value del Modelo | R² |
+|---------------------|-------------|--------------------|-----|
+| at_bats             | 0.61        | 3.39e-04           | 0.373 |
+| hits                | 0.80        | 1.04e-07           | 0.642 |
+| homeruns            | 0.79        | 1.90e-07           | 0.627 |
+| bat_avg             | 0.81        | 5.88e-08           | 0.656 |
+| strikeouts          | -0.41       | 2.39e-02           | 0.169 |
+| stolen_bases        | 0.05        | 0.777              | 0.003 |
+| wins                | 0.60        | 4.47e-04           | 0.361 |
+
+**Pregunta 9:**
+La variable que mejor predice runs es bat_avg, ya que tiene el mayor valor de R² (0.6561), lo que significa que explica el 65.6% de la variabilidad en runs. Además, presenta la correlación más alta con runs (0.81) y el modelo es estadísticamente significativo (p-value < 0.05). Por estas razones, bat_avg es la mejor predictora entre las variables analizadas.
+
+---
+
+## Tercera Parte: Regresión Lineal Múltiple
+
+### Modelo de Cinco Variables
+
+```{r modelo-multiple-5vars}
+# Modelo de regresión múltiple con 5 variables
+mul <- lm(runs ~ at_bats + hits + homeruns + bat_avg + wins, data = beis)
+summary(mul)
+```
+
+**Pregunta 10:** La fórmula del modelo de regresión lineal múltiple es: ŷ = 2583.42 - 0.54 * at_bats + 2.25 * hits + 1.04 * homeruns - 9059.25 * bat_avg + 0.86 * wins
+
+**Pregunta 11:** Sí, el modelo es significativo. Esto se determina observando el p-value del estadístico F (2.504e-10), que es mucho menor que 0.05. Esto indica que, en conjunto, al menos una de las variables predictoras tiene un efecto significativo sobre runs.
+
+**Pregunta 12:** El Adjusted R-squared del modelo es 0.856, lo que significa que el 85.6% de la variabilidad en runs es explicada por este modelo múltiple. Este porcentaje es mayor que el del mejor modelo lineal simple de la Pregunta 9 (bat_avg, R² = 0.656), por lo que el modelo múltiple es un mejor predictor.
+
+### Análisis de Multicolinealidad
+
+```{r vif-analysis}
+# Calcular VIF
+vif_values <- vif(mul)
+vif_values
+```
+
+**Pregunta 13:** Los valores VIF obtenidos son:
+```
+at_bats: 99.419844
+hits: 1803.225223
+homeruns: 2.234504
+bat_avg: 1195.442185
+wins: 2.234290
+```
+
+Algunos valores VIF son superiores a 5 (especialmente hits con 1803.23), lo que indica presencia de multicolinealidad moderada a alta en el modelo. Esto sugiere que algunas variables predictoras están correlacionadas entre sí.
+
+### Modelos con Cuatro Variables
+
+```{r modelos-4vars}
+# Crear combinaciones de 4 variables de las 5 originales
+vars_5 <- c("at_bats", "hits", "homeruns", "bat_avg", "wins")
+combinaciones_4 <- combn(vars_5, 4, simplify = FALSE)
+
+# Crear tabla de resultados
+tabla_4vars <- data.frame(
+  Variables_utilizadas = character(),
+  p_value_modelo = numeric(),
+  R2_ajustado = numeric(),
+  VIF_promedio = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Analizar cada combinación
+for(i in 1:length(combinaciones_4)) {
+  vars <- combinaciones_4[[i]]
+  vars_str <- paste(vars, collapse = ", ")
+  
+  # Crear fórmula
+  formula_str <- paste("runs ~", paste(vars, collapse = " + "))
+  modelo_4 <- lm(as.formula(formula_str), data = beis)
+  modelo_4_summary <- summary(modelo_4)
+  
+  # p-value del modelo
+  f_stat <- modelo_4_summary$fstatistic
+  p_value <- pf(f_stat[1], f_stat[2], f_stat[3], lower.tail = FALSE)
+  
+  # R² ajustado
+  r2_adj <- modelo_4_summary$adj.r.squared
+  
+  # VIF promedio
+  vif_vals <- vif(modelo_4)
+  vif_promedio <- mean(vif_vals)
+  
+  # Agregar a tabla
+  tabla_4vars <- rbind(tabla_4vars, data.frame(
+    Variables_utilizadas = vars_str,
+    p_value_modelo = p_value,
+    R2_ajustado = r2_adj,
+    VIF_promedio = vif_promedio
+  ))
+}
+
+print(tabla_4vars, row.names = FALSE)
+
+# Mostrar código específico para el primer modelo (at_bats, hits, homeruns, bat_avg)
+cat("\nCódigo específico para el modelo con at_bats, hits, homeruns, bat_avg:\n")
+modelo_especifico <- lm(runs ~ at_bats + hits + homeruns + bat_avg, data = beis)
+summary(modelo_especifico)
+cat("\nVIF para este modelo:\n")
+vif(modelo_especifico)
+```
+
+**Pregunta 14:**
+La siguiente tabla muestra las combinaciones de cuatro variables utilizadas en los modelos de regresión múltiple, junto con el p-value del modelo, el R² ajustado y el VIF promedio de esas variables:
+
+| Variables utilizadas                  | p-value del modelo | R² ajustado | VIF promedio |
+|---------------------------------------|-------------------|-------------|--------------|
+| at_bats, hits, homeruns, bat_avg      | 6.48e-11          | 0.8544      | 764.49       |
+| at_bats, hits, homeruns, wins         | 4.04e-11          | 0.8598      | 3.32         |
+| at_bats, hits, bat_avg, wins          | 3.56e-08          | 0.7570      | 769.89       |
+| at_bats, homeruns, bat_avg, wins      | 4.70e-11          | 0.8581      | 2.57         |
+| hits, homeruns, bat_avg, wins         | 4.52e-11          | 0.8585      | 27.38        |
+
+Para el modelo específico con at_bats, hits, homeruns y bat_avg, el código R utilizado fue:
+```r
+modelo_especifico <- lm(runs ~ at_bats + hits + homeruns + bat_avg, data = beis)
+summary(modelo_especifico)
+vif(modelo_especifico)
+```
+
+**Pregunta 15:**
+El modelo de cuatro variables que predice mejor la variable de respuesta es el que utiliza at_bats, hits, homeruns y wins, ya que tiene el mayor R² ajustado (0.8598), un p-value muy bajo (4.04e-11), y un VIF promedio bajo (3.32), lo que indica que no hay problemas de multicolinealidad. Por lo tanto, este modelo es el mejor entre los modelos de cuatro variables, ya que es estadísticamente significativo y presenta menor multicolinealidad que otros modelos con R² ajustado similar.
+---
